@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>M1S · Fragrance Library</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://alcdn.msauth.net">
+<style>
+:root{
+  --ink:#16202c; --muted:#5f6c7d;
+  --glass:rgba(255,255,255,.62); --edge:rgba(255,255,255,.75);
+  --shadow:0 8px 32px rgba(31,45,75,.12);
+  --accentink:#1b6fae; --sel:#1b6fae; --grid:rgba(95,108,125,.16);
+  --good:#2f7d4f; --good-soft:rgba(63,125,88,.15);
+  --warn:#9a6b2f; --warn-soft:rgba(154,107,47,.13);
+  --bad:#b4452f; --bad-soft:rgba(180,69,47,.12);
+  --ring:rgba(47,155,214,.18);
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-size:14px;line-height:1.45;color:var(--ink);
+  background:linear-gradient(135deg,#e8f0fa 0%,#f3eef9 45%,#eaf6f1 100%);
+  background-attachment:fixed;-webkit-font-smoothing:antialiased;
+}
+#flow{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55}
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+.topbar{
+  display:flex;align-items:center;gap:14px;padding-block:10px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));flex:0 0 auto;flex-wrap:wrap;
+  background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border-bottom:1px solid var(--edge);box-shadow:0 2px 14px rgba(31,45,75,.06);
+}
+.brand{font-weight:700;font-size:15px}
+.brand span{color:var(--muted);font-weight:400;margin-left:9px;font-size:12px}
+.spacer{flex:1}
+.who{font-size:12.5px;color:var(--muted)}
+button{font-family:inherit;cursor:pointer}
+.btn{font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:11px;border:1px solid var(--edge);background:rgba(255,255,255,.75);color:var(--ink);white-space:nowrap}
+.btn:hover{background:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{color:#fff;background:linear-gradient(135deg,#2f9bd6,#1b6fae);border:1px solid var(--edge)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{color:#fff;background:var(--bad)}
+.btn.sm{padding:6px 10px;font-size:11.5px}
+.seg{display:inline-flex;background:rgba(255,255,255,.55);border:1px solid var(--edge);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:none;background:none;font-size:12.5px;font-weight:600;color:var(--muted);padding:6px 13px;border-radius:9px;display:flex;align-items:center;gap:7px}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 6px rgba(31,45,75,.1)}
+.seg b{font-size:11px;font-weight:700;color:var(--accentink);background:rgba(47,155,214,.14);border-radius:999px;padding:0 7px;font-variant-numeric:tabular-nums}
+.seg b.warn{color:var(--warn);background:var(--warn-soft)}
+.main{flex:1;overflow:auto;padding-block:18px 40px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--glass);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--edge);border-radius:18px;box-shadow:var(--shadow)}
+input,select,textarea{font-family:inherit;font-size:13px;color:var(--ink);background:rgba(255,255,255,.8);border:1px solid var(--edge);border-radius:11px;padding:8px 12px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{background:#fff;box-shadow:0 0 0 3px var(--ring)}
+label.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+label.fld > span{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px}
+.tools .q{flex:1 1 240px;max-width:360px}
+.tools select{width:auto;min-width:170px}
+.count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px}
+.inline-load{display:flex;align-items:center;gap:9px;padding:16px;color:var(--muted);font-size:12.5px}
+.spin{width:15px;height:15px;border:2px solid var(--ring);border-top-color:var(--accentink);border-radius:50%;animation:sp .8s linear infinite;flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.save{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save.err{color:var(--bad);font-weight:600}
+.save .spin{width:12px;height:12px}
+.banner{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:14px;background:var(--warn-soft);border:1px solid var(--edge);color:var(--warn);font-size:12.5px;flex-wrap:wrap}
+.banner.demo{background:rgba(47,155,214,.13);color:var(--accentink)}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.hint{font-size:11.5px;color:var(--muted)}
+.err-line{font-size:12px;color:var(--bad);font-weight:600;min-height:16px}
+.gate{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e8f0fa 0%,#f3eef9 45%,#eaf6f1 100%)}
+.gate .card{padding:32px 40px;text-align:center;display:flex;flex-direction:column;gap:15px;align-items:center;max-width:440px}
+
+/* library grid */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:14px}
+.fcard{overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .13s,box-shadow .13s}
+.fcard:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(31,45,75,.16)}
+.fimg{aspect-ratio:1/1;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--grid)}
+.fimg{position:relative}
+.fimg img{width:100%;height:100%;object-fit:contain;display:block}
+.zoom{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:9px;border:1px solid var(--edge);background:rgba(255,255,255,.9);color:var(--ink);font-size:14px;line-height:1;opacity:0;transition:opacity .13s}
+.fcard:hover .zoom,.zoom:focus{opacity:1}
+.zoom:hover{background:#fff;color:var(--accentink)}
+@media (hover:none){.zoom{opacity:1}}
+.fimg .none{font-size:11px;color:var(--muted)}
+.fbd{padding:10px 13px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.fname{font-weight:700;font-size:13.5px;line-height:1.3;min-height:2.6em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fmeta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap;align-self:flex-start}
+.pill.b{background:rgba(47,155,214,.16);color:var(--accentink)}
+.pill.m{background:rgba(95,108,125,.14);color:var(--muted)}
+.pill.g{background:var(--good-soft);color:var(--good)}
+.pill.w{background:var(--warn-soft);color:var(--warn)}
+.pill.alc{background:rgba(242,115,74,.14);color:#a8452a}
+.pills{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.dropcol{display:flex;flex-direction:column;gap:8px;flex:0 0 auto;width:200px}
+.ocrline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);line-height:1.35}
+.ocrline .spin{width:12px;height:12px}
+.ocrline.ok{color:var(--accentink)}
+.ocrline.bad{color:var(--bad)}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input.auto,select.auto{background:rgba(47,155,214,.10);box-shadow:inset 0 0 0 1px rgba(47,155,214,.4)}
+.facl{display:flex;flex-direction:column;gap:2px;max-height:50vh;overflow:auto;margin-top:8px;border:1px solid var(--edge);border-radius:12px;background:rgba(255,255,255,.55);padding:4px}
+.facr{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;font-size:13px;cursor:pointer}
+.facr:hover{background:#fff}
+.facr input{width:16px;height:16px;accent-color:var(--accentink);flex:0 0 auto}
+.linkbtn{border:none;background:none;padding:0;font-size:12px;font-weight:600;color:var(--accentink);text-align:left;cursor:pointer}
+.linkbtn:hover{text-decoration:underline}
+
+/* styles table */
+.tbl-scroll{overflow:auto;max-width:100%;max-height:calc(100vh - 190px);border-radius:18px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--grid);vertical-align:middle}
+thead th{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:rgba(240,245,251,.97);position:sticky;top:0;z-index:2;white-space:nowrap}
+tbody tr:hover td{background:rgba(255,255,255,.78)}
+tbody tr:last-child td{border-bottom:none}
+td.ph-c{width:1%}
+td.sty{font-weight:700;white-space:nowrap}
+td.desc{min-width:220px;max-width:420px}
+td.src{white-space:nowrap}
+td.src .pill{margin-right:4px}
+td.act{text-align:right;white-space:nowrap}
+.ph{width:44px;height:44px;border-radius:9px;overflow:hidden;background:rgba(255,255,255,.55);border:1px solid var(--edge);display:flex;align-items:center;justify-content:center}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph.load{background:linear-gradient(100deg,rgba(255,255,255,.5) 30%,#fff 50%,rgba(255,255,255,.5) 70%);background-size:220% 100%;animation:shim 1.3s linear infinite}
+@keyframes shim{to{background-position:-220% 0}}
+.ph .none{font-size:9px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.85);border:1px solid var(--edge);border-radius:999px;padding:2px 10px 2px 2px;font-size:12px;font-weight:600;max-width:240px;box-shadow:0 1px 4px rgba(31,45,75,.06)}
+.chip img,.chip .dot{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:rgba(95,108,125,.14)}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip.gone{color:var(--bad)}
+.chip b.alc{font-size:10.5px;color:#a8452a;background:rgba(242,115,74,.14);border-radius:999px;padding:0 6px;flex:0 0 auto}
+.chip .x{border:none;background:none;color:var(--muted);font-size:13px;line-height:1;padding:0 0 0 2px}
+.chip .x:hover{color:var(--bad)}
+.pick{border:1px dashed rgba(95,108,125,.4);background:rgba(255,255,255,.5);color:var(--muted);border-radius:999px;padding:4px 12px;font-size:12px;font-weight:600}
+.pick:hover{border-color:var(--accentink);color:var(--accentink);background:#fff}
+.srcbar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.srcbar .spin{width:12px;height:12px}
+
+/* dialogs */
+dialog{margin:auto;border:1px solid var(--edge);border-radius:18px;padding:0;max-width:460px;width:92vw;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);box-shadow:var(--shadow);color:var(--ink)}
+dialog::backdrop{background:rgba(22,32,44,.28);backdrop-filter:blur(3px)}
+dialog.wide{max-width:860px;width:94vw}
+dialog.mid{max-width:640px}
+.dlg-hd{padding:15px 18px 0;font-size:15px;font-weight:700}
+.dlg-hd .sub{font-size:12.5px;color:var(--muted);font-weight:400;margin-top:2px}
+.dlg-bd{padding:15px 18px;display:flex;flex-direction:column;gap:13px}
+.dlg-ft{display:flex;align-items:center;gap:9px;padding:0 18px 16px}
+.frow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.frow .fields{flex:1 1 260px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.drop{width:200px;height:200px;border-radius:14px;border:1.5px dashed rgba(95,108,125,.4);background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:var(--muted);cursor:pointer;overflow:hidden;position:relative;padding:10px}
+.drop:hover,.drop.over{border-color:var(--accentink);background:#fff;color:var(--accentink)}
+.drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
+.drop .rep{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;background:rgba(255,255,255,.92);border:1px solid var(--edge);border-radius:999px;padding:3px 10px;color:var(--ink);white-space:nowrap}
+.ptiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:10px;max-height:52vh;overflow:auto;padding:2px}
+.ptile{border:1px solid var(--edge);border-radius:13px;background:rgba(255,255,255,.75);overflow:hidden;cursor:pointer;position:relative;text-align:left;padding:0;display:flex;flex-direction:column}
+.ptile:hover{background:#fff}
+.ptile.on{box-shadow:0 0 0 2.5px var(--sel);background:#fff}
+.ptile .im{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--muted)}
+.ptile .im img{width:100%;height:100%;object-fit:contain}
+.ptile .tx{padding:6px 8px 8px;font-size:11.5px;font-weight:700;line-height:1.3}
+.ptile .tx small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptile .ck{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--sel);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center}
+.ptile.on .ck{display:flex}
+dialog.lb{max-width:92vw;max-height:92vh;padding:10px;background:#fff;cursor:zoom-out;width:auto}
+dialog.lb img{display:block;max-width:calc(92vw - 20px);max-height:calc(92vh - 50px);object-fit:contain;margin:0 auto}
+.lb-cap{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+@media (max-width:640px){.dropcol{width:100%}.main{padding-block:12px 30px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.drop{width:100%;height:220px}.tools select{min-width:0;flex:1 1 120px}.fgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}#flow{display:none}}
+</style>
+</head>
+<body>
+<canvas id="flow"></canvas>
+
+<div class="gate" id="gate">
+  <div class="card">
+    <div>
+      <div style="font-size:19px;font-weight:700">Fragrance Library</div>
+      <div style="color:var(--muted);font-size:12.5px;margin-top:4px">Metro1 Solutions</div>
+    </div>
+    <div id="gateMsg" class="inline-load"><div class="spin"></div>Checking your session…</div>
+    <button class="btn primary" id="signIn" style="display:none">Sign in with Microsoft</button>
+    <button class="btn" id="demoBtn" style="display:none">View demo with sample data</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand">M1S Fragrance Library<span>factory samplers · scents by style</span></div>
+    <div class="seg" id="tabs">
+      <button data-v="lib">Library <b id="cLib">0</b></button>
+      <button data-v="sty">Styles <b id="cSty">0</b></button>
+    </div>
+    <div class="spacer"></div>
+    <div class="save" id="save"></div>
+    <div class="who" id="whoName"></div>
+  </div>
+  <div class="main"><div class="wrap" id="view"></div></div>
+</div>
+
+<dialog id="fDlg" class="mid"></dialog>
+<dialog id="pDlg" class="wide"></dialog>
+<dialog id="aDlg"></dialog>
+<dialog id="lbDlg" class="lb" onclick="this.close()"><img id="lbImg" alt=""><div class="lb-cap" id="lbCap"></div></dialog>
+<input type="file" id="imgPick" accept="image/*" style="display:none">
+
+<script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+<script>
+"use strict";
+
+/* ============================== CONFIG ============================== */
+const CFG = {
+  clientId : "4f09444a-97b0-45b8-a20c-f9fa4a3e0122",
+  tenantId : "eeea7e3e-9ccb-4a16-894e-3417c6a7a4c1",
+  host     : "met1sol.sharepoint.com",
+  sitePath : "/sites/Production",
+  scopes   : ["User.Read", "Sites.ReadWrite.All"],
+  manageScopes : ["Sites.Manage.All"],          // only asked for when creating the two lists
+
+  listLib       : "Fragrance_Library",          // one row per sampler fragrance
+  listMap       : "Style_Scents",               // one row per style → fragrance id(s)
+  listFactories : "Factories",
+  listTracker   : "Qoute_Tracker",              // internal-name typo is real
+  trackerAlt    : "Quote_Tracker",
+  listUpc       : "UPC_MASTER",
+
+  imgDrive      : "Documents",
+  fullPath      : "Fragrance Library/full",     // <id>.jpg, 1400px
+  quoteImgPath  : "Quote Sheets/Quote Images",  // style photos, shared with Quote Tracker
+  thumbPx       : 220,                          // stored in the list row as a JPEG data URL
+  ocr : {                                       // label reader (Tesseract), loaded the first time a photo is added
+    lib    : "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js",
+    worker : "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+    core   : "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+    lang   : "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int",
+    langFile : ""                               // optional: one file with the language data, fetched by the page itself
+  }
+};
+const LIB_COLS = ["Title","Factory","FactoryCode","Thumb"];
+const MAP_COLS = ["Title","StyleKey","FragranceIds","FragranceNames"];
+const IS_FRAG = /fragran/i;
+const G = "https://graph.microsoft.com/v1.0";
+
+const keyOf = s => String(s || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+const normName = s => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+const encPath = p => p.split("/").map(encodeURIComponent).join("/");
+const splitIds = v => String(v || "").split(/[;,\s]+/).filter(Boolean);
+const byText = (a, b) => String(a).localeCompare(String(b), undefined, { numeric:true, sensitivity:"base" });
+const $ = s => document.querySelector(s);
+function el(t, c, txt){ const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]); }
+
+/* ============================== STATE =============================== */
+const S = {
+  acct:null, siteId:null, lists:{}, drive:null,
+  cols:{ lib:{}, map:{} }, missing:[], idxWarn:"",
+  lib:[], libById:new Map(),
+  map:new Map(), dupes:new Map(),                 // styleKey → { itemId, style, key, ids[] }
+  factories:[], facErr:"",
+  src:{ qt:[], upc:[], qtState:"idle", upcState:"idle", upcRead:0, qtErr:"", upcErr:"" },
+  manual:new Map(), styles:[], photos:new Map(),
+  view:"lib", q:"", fac:"", sf:"missing", sq:""
+};
+
+/* ============================== MSAL ================================ */
+const redirectUri = window.location.origin + window.location.pathname;
+const msalApp = window.msal ? new msal.PublicClientApplication({
+  auth:{ clientId:CFG.clientId, authority:"https://login.microsoftonline.com/" + CFG.tenantId, redirectUri },
+  cache:{ cacheLocation:"localStorage", storeAuthStateInCookie:false }
+}) : null;
+const framed = (function(){ try { return window.self !== window.top; } catch(e){ return true; } })();
+
+async function getToken(scopes){
+  if (DEMO) return "demo";
+  scopes = scopes || CFG.scopes;
+  try { return (await msalApp.acquireTokenSilent({ scopes, account:S.acct })).accessToken; }
+  catch(e){
+    if (framed) return (await msalApp.acquireTokenPopup({ scopes })).accessToken;
+    msalApp.acquireTokenRedirect({ scopes });
+    return new Promise(() => {});
+  }
+}
+
+/* ============================== GRAPH =============================== */
+async function gf(path, opts){
+  opts = opts || {};
+  if (DEMO) return demoGraph(path, opts);
+  const tok = await getToken(opts.scopes);
+  const h = Object.assign({ Authorization:"Bearer " + tok }, opts.headers || {});
+  if (opts.body && typeof opts.body === "string" && !h["Content-Type"]) h["Content-Type"] = "application/json";
+  const url = /^https?:/.test(path) ? path : G + path;
+  const res = await fetch(url, { method:opts.method || "GET", headers:h, body:opts.body, signal:opts.signal });
+  if (res.status === 429 || res.status === 503){
+    await new Promise(r => setTimeout(r, parseInt(res.headers.get("Retry-After") || "3", 10) * 1000));
+    return gf(path, opts);
+  }
+  if (!res.ok){
+    const txt = await res.text().catch(() => "");
+    let msg = txt; try { msg = JSON.parse(txt).error.message || txt; } catch(e){}
+    const err = new Error("Graph " + res.status + " — " + String(msg).slice(0, 240));
+    err.status = res.status; throw err;
+  }
+  if (res.status === 204 || res.status === 202) return null;
+  const ct = res.headers.get("Content-Type") || "";
+  return ct.indexOf("json") >= 0 ? res.json() : null;
+}
+async function gAll(path, onPage){
+  const out = []; let next = path;
+  while (next){
+    const p = await gf(next);
+    if (p && p.value) out.push.apply(out, p.value);
+    if (onPage) onPage(out.length);
+    next = p && p["@odata.nextLink"] ? p["@odata.nextLink"] : null;
+  }
+  return out;
+}
+const itemsPath = name => "/sites/" + S.siteId + "/lists/" + listId(name) + "/items";
+function listId(name){ return S.lists[name] || S.lists[String(name).toLowerCase()] || null; }
+
+/* ====================== SITE / LISTS / COLUMNS ====================== */
+async function resolveSite(){
+  const s = await gf("/sites/" + CFG.host + ":" + CFG.sitePath);
+  S.siteId = s.id; S.lists = {};
+  const lists = await gAll("/sites/" + S.siteId + "/lists?$select=id,name,displayName&$top=300");
+  lists.forEach(l => [l.name, l.displayName].forEach(n => { S.lists[n] = l.id; S.lists[String(n).toLowerCase()] = l.id; }));
+  const drives = await gAll("/sites/" + S.siteId + "/drives?$select=id,name");
+  const d = drives.find(x => x.name === CFG.imgDrive);
+  S.drive = d ? d.id : (drives[0] && drives[0].id) || null;
+}
+/* Map canonical names to real internal names (handles the trailing digit SharePoint
+   adds on a clash, casing drift, and lists built by hand with display names). */
+async function resolveCols(listName, canon){
+  const cols = await gAll("/sites/" + S.siteId + "/lists/" + listId(listName) + "/columns?$select=name,displayName,readOnly&$top=300");
+  const strip = s => String(s).replace(/\d+$/, "").replace(/[\s_]/g, "").toLowerCase();
+  const out = {}, miss = [];
+  canon.forEach(k => {
+    const lk = k.toLowerCase(), sk = strip(k);
+    const hit = cols.find(c => c.name === k) || cols.find(c => String(c.name).toLowerCase() === lk)
+      || cols.find(c => strip(c.name) === sk) || cols.find(c => strip(c.displayName) === sk);
+    if (hit) out[k] = hit.name; else miss.push(k);
+  });
+  return { out, miss };
+}
+
+/* Columns added after the first release. Lists built earlier get them in place from the banner. */
+const OPT_COLS = [
+  { key:"Alcohol",     label:"Percent",      def:{ name:"Alcohol", displayName:"Percent", number:{ decimalPlaces:"automatic", minimum:0, maximum:100 } } },
+  { key:"SampleDate",  label:"Sample Date",  def:{ name:"SampleDate", displayName:"Sample Date", text:{} } },     // yyyy-mm-dd
+  { key:"ScentOption", label:"Scent Option", def:{ name:"ScentOption", displayName:"Scent Option", text:{} } }
+];
+const OPT_KEYS = OPT_COLS.map(x => x.key);
+async function addMissingCols(btn){
+  try { sessionStorage.setItem("fl-cols", "1"); } catch(e){}
+  if (btn){ btn.disabled = true; btn.textContent = "Adding…"; }
+  try {
+    for (const k of S.optMiss){
+      const oc = OPT_COLS.find(x => x.key === k);
+      await gf("/sites/" + S.siteId + "/lists/" + listId(CFG.listLib) + "/columns", { method:"POST", scopes:CFG.manageScopes, body:JSON.stringify(oc.def) });
+    }
+    try { sessionStorage.removeItem("fl-cols"); } catch(e){}
+    await boot();
+  } catch(e){
+    try { sessionStorage.removeItem("fl-cols"); } catch(x){}
+    if (btn){ btn.disabled = false; btn.textContent = "Add columns"; }
+    setSave("err", "Couldn't add the columns — " + e.message);
+  }
+}
+/* One-time setup: build both lists with the right column types. Needs Sites.Manage.All
+   once (Saul consents); everyday use only needs Sites.ReadWrite.All. */
+async function createLists(btn){
+  try { sessionStorage.setItem("fl-create", "1"); } catch(e){}
+  if (btn){ btn.disabled = true; btn.textContent = "Creating…"; }
+  const opt = { method:"POST", scopes:CFG.manageScopes };
+  const base = "/sites/" + S.siteId + "/lists";
+  try {
+    if (!listId(CFG.listLib)) await gf(base, Object.assign({ body:JSON.stringify({
+      displayName:CFG.listLib, list:{ template:"genericList" },
+      columns:[ { name:"Factory", text:{} }, { name:"FactoryCode", text:{} },
+                { name:"Thumb", text:{ allowMultipleLines:true, textType:"plain", appendChangesToExistingText:false } }
+              ].concat(OPT_COLS.map(x => x.def))
+    }) }, opt));
+    if (!listId(CFG.listMap)){
+      const l = await gf(base, Object.assign({ body:JSON.stringify({
+        displayName:CFG.listMap, list:{ template:"genericList" },
+        columns:[ { name:"StyleKey", text:{} }, { name:"FragranceIds", text:{} },
+                  { name:"FragranceNames", text:{ allowMultipleLines:true, textType:"plain", appendChangesToExistingText:false } } ]
+      }) }, opt));
+      try {
+        const cols = await gAll(base + "/" + l.id + "/columns?$select=id,name");
+        const sk = cols.find(c => c.name === "StyleKey");
+        if (sk) await gf(base + "/" + l.id + "/columns/" + sk.id, { method:"PATCH", scopes:CFG.manageScopes, body:JSON.stringify({ indexed:true }) });
+      } catch(e){ S.idxWarn = "Lists created, but StyleKey couldn't be indexed automatically — Style_Scents → List settings → Indexed columns → add StyleKey."; }
+    }
+    try {
+      const fc = await resolveCols(CFG.listFactories, ["Fragrance"]);
+      if (!fc.out.Fragrance) await gf("/sites/" + S.siteId + "/lists/" + listId(CFG.listFactories) + "/columns",
+        { method:"POST", scopes:CFG.manageScopes, body:JSON.stringify({ name:"Fragrance", displayName:"Fragrance", boolean:{} }) });
+    } catch(e){}                                                   // optional — the Factories button can add it later
+    try { sessionStorage.removeItem("fl-create"); } catch(e){}
+    await boot();
+  } catch(e){
+    try { sessionStorage.removeItem("fl-create"); } catch(x){}
+    console.error(e);
+    if (btn){ btn.disabled = false; btn.textContent = "Create lists"; }
+    setSave("err", "List setup failed — " + e.message);
+  }
+}
+
+/* ============================== LOADERS ============================= */
+async function loadLib(){
+  const c = S.cols.lib, sel = LIB_COLS.concat(OPT_KEYS).map(k => c[k]).filter(Boolean).join(",");
+  const rows = await gAll(itemsPath(CFG.listLib) + "?$expand=fields($select=" + sel + ")&$top=999");
+  S.lib = rows.map(libFrom).sort((a, b) => byText(a.name, b.name));
+  S.libById = new Map(S.lib.map(f => [f.id, f]));
+}
+function libFrom(r){
+  const f = r.fields || {}, c = S.cols.lib, a = c.Alcohol ? f[c.Alcohol] : null;
+  return { id:String(r.id), name:String(f[c.Title] || "").trim(), factory:String(f[c.Factory] || "").trim(),
+           code:String(f[c.FactoryCode] || "").trim(), thumb:String(f[c.Thumb] || ""),
+           alc:a == null || a === "" || isNaN(Number(a)) ? null : Number(a),
+           date:c.SampleDate ? String(f[c.SampleDate] || "").trim() : "", option:c.ScentOption ? String(f[c.ScentOption] || "").trim() : "" };
+}
+const fmtDate = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? +m[2] + "/" + +m[3] + "/" + m[1] : ""; };
+const hay = f => normName([f.name, f.factory, f.option, f.code, fmtDate(f.date)].join(" "));
+const pct = f => f && f.alc != null ? String(Math.round(f.alc * 10) / 10) + "%" : "";
+async function loadMap(){
+  const c = S.cols.map, sel = MAP_COLS.map(k => c[k]).filter(Boolean).join(",");
+  const rows = await gAll(itemsPath(CFG.listMap) + "?$expand=fields($select=" + sel + ")&$top=999");
+  S.map = new Map(); S.dupes = new Map();
+  rows.sort((a, b) => String(b.lastModifiedDateTime).localeCompare(String(a.lastModifiedDateTime)));
+  rows.forEach(r => {
+    const f = r.fields || {}, style = String(f[c.Title] || "").trim(), key = keyOf(f[c.StyleKey] || style);
+    if (!key) return;
+    if (S.map.has(key)){ (S.dupes.get(key) || S.dupes.set(key, []).get(key)).push(String(r.id)); return; }  // newest wins
+    S.map.set(key, { itemId:String(r.id), style:style || key, key, ids:splitIds(f[c.FragranceIds]) });
+  });
+}
+/* Factories: every row, plus a yes/no "Fragrance" column on the Factories list that
+   marks which ones make fragrance. Only marked factories are offered on a sampler
+   (all of them until at least one is marked). */
+async function loadFactories(){
+  S.factories = []; S.facRows = []; S.facErr = ""; S.facCol = null;
+  try {
+    const id = listId(CFG.listFactories);
+    if (!id){ S.facErr = 'No list named "' + CFG.listFactories + '".'; return; }
+    const fc = await resolveCols(CFG.listFactories, ["Fragrance"]);
+    S.facCol = fc.out.Fragrance || null;
+    const rows = await gAll("/sites/" + S.siteId + "/lists/" + id + "/items?$expand=fields&$top=999");
+    const seen = new Set();
+    rows.forEach(r => {
+      const fl = r.fields || {}, v = String(fl.Title || fl.Supplier || fl.Factory || fl.FactoryName || fl.Name || "").trim();
+      if (!v || seen.has(v.toLowerCase())) return; seen.add(v.toLowerCase());
+      const fv = S.facCol ? fl[S.facCol] : false;
+      S.facRows.push({ id:String(r.id), name:v, frag:fv === true || /^(yes|true|1)$/i.test(String(fv || "")) });
+    });
+    S.facRows.sort((a, b) => byText(a.name, b.name));
+    S.factories = S.facRows.map(x => x.name);
+    if (!S.factories.length) S.facErr = "Factories list is empty.";
+  } catch(e){ S.facErr = "Factories list error — " + e.message; }
+}
+const fragFactories = () => { const m = S.facRows.filter(x => x.frag).map(x => x.name); return m.length ? m : S.factories; };
+async function addFacColumn(){
+  await gf("/sites/" + S.siteId + "/lists/" + listId(CFG.listFactories) + "/columns",
+    { method:"POST", scopes:CFG.manageScopes, body:JSON.stringify({ name:"Fragrance", displayName:"Fragrance", boolean:{} }) });
+  await loadFactories();
+}
+
+/* Pick which factories make fragrance. Staged: Save writes only the ticks that changed. */
+function openFactories(){
+  const d = $("#aDlg"), { bd, ft } = dlgShell(d, "Fragrance factories", "Only ticked factories are offered when adding a sampler");
+  const ticks = new Map(S.facRows.map(x => [x.id, x.frag]));
+  let q = "";
+  const err = el("div", "err-line"), box = el("div");
+  const qi = el("input"); qi.type = "search"; qi.placeholder = "Search factories";
+  qi.oninput = () => { q = normName(qi.value); paint(); };
+  const paint = () => {
+    box.innerHTML = "";
+    if (!S.facCol){
+      const b = el("div", "banner"); b.appendChild(el("span", null, "The Factories list needs a Fragrance column to save this."));
+      const ab = el("button", "btn sm", "Add column");
+      ab.onclick = async () => { ab.disabled = true; ab.textContent = "Adding…";
+        try { await addFacColumn(); ticks.clear(); S.facRows.forEach(x => ticks.set(x.id, x.frag)); paint(); }
+        catch(e){ err.textContent = "Couldn't add the column — " + e.message; ab.disabled = false; ab.textContent = "Add column"; } };
+      b.appendChild(ab); box.appendChild(b); return;
+    }
+    const list = S.facRows.filter(x => !q || normName(x.name).indexOf(q) >= 0);
+    const n = Array.from(ticks.values()).filter(Boolean).length;
+    box.appendChild(el("div", "hint", n + " of " + S.facRows.length + " marked as fragrance factories"));
+    const ul = el("div", "facl");
+    list.forEach(x => {
+      const l = el("label", "facr"), cb = el("input"); cb.type = "checkbox"; cb.checked = !!ticks.get(x.id);
+      cb.onchange = () => { ticks.set(x.id, cb.checked); paint(); save.disabled = !changed().length; };
+      l.appendChild(cb); l.appendChild(el("span", null, x.name)); ul.appendChild(l);
+    });
+    if (!list.length) ul.appendChild(el("div", "hint", S.facRows.length ? "Nothing matches." : (S.facErr || "No factories.")));
+    box.appendChild(ul);
+  };
+  const changed = () => S.facRows.filter(x => !!ticks.get(x.id) !== x.frag);
+  bd.appendChild(qi); bd.appendChild(box); bd.appendChild(err);
+  ft.appendChild(el("div", "spacer"));
+  const cancel = el("button", "btn", "Cancel"), save = el("button", "btn primary", "Save");
+  let stop = false;
+  cancel.onclick = () => { stop = true; d.close(); };
+  d.oncancel = () => { stop = true; };
+  save.disabled = true;
+  save.onclick = async () => {
+    const ch = changed(); if (!ch.length){ d.close(); return; }
+    save.disabled = true; save.textContent = "Saving…"; err.textContent = "";
+    try {
+      for (const x of ch){
+        if (stop) break;
+        const body = {}; body[S.facCol] = !!ticks.get(x.id);
+        await track(gf("/sites/" + S.siteId + "/lists/" + listId(CFG.listFactories) + "/items/" + x.id + "/fields", { method:"PATCH", body:JSON.stringify(body) }));
+        x.frag = !!ticks.get(x.id);
+      }
+      d.close(); renderAll();
+    } catch(e){ err.textContent = e.message; save.disabled = false; save.textContent = "Save"; }
+  };
+  ft.appendChild(cancel); ft.appendChild(save);
+  paint(); d.showModal(); qi.focus();
+}
+
+/* Fragrance-category styles come from Quote Tracker and UPC_MASTER. Both are read
+   whole (UPC_MASTER is past the 5,000 threshold, so no $filter on Category) in the
+   background; the last result is cached so the Styles tab opens instantly. */
+async function loadSources(){
+  try {
+    const c = DEMO ? null : JSON.parse(localStorage.getItem("fl-src") || "null");
+    if (c && c.qt && c.upc){ S.src.qt = c.qt; S.src.upc = c.upc; rebuildStyles(); }
+  } catch(e){}
+  S.src.qtState = S.src.upcState = "loading"; S.src.upcRead = 0; schedRender();
+  await Promise.all([
+    readQT().then(r => { S.src.qt = r; S.src.qtState = "ok"; }).catch(e => { S.src.qtState = "err"; S.src.qtErr = e.message; }),
+    readUPC().then(r => { S.src.upc = r; S.src.upcState = "ok"; }).catch(e => { S.src.upcState = "err"; S.src.upcErr = e.message; })
+  ]);
+  if (!DEMO && S.src.qtState === "ok" && S.src.upcState === "ok"){
+    try { localStorage.setItem("fl-src", JSON.stringify({ qt:S.src.qt, upc:S.src.upc, at:Date.now() })); } catch(e){}
+  }
+  rebuildStyles(); schedRender(); loadPhotos();
+}
+async function readQT(){
+  const name = listId(CFG.listTracker) ? CFG.listTracker : CFG.trackerAlt;
+  if (!listId(name)) throw new Error("Quote Tracker list not found");
+  const rows = await gAll(itemsPath(name) + "?$expand=fields($select=Title,Descr,Category,ImgKey,Archived)&$top=999");
+  const out = [];
+  rows.forEach(r => {
+    const f = r.fields || {};
+    if (!IS_FRAG.test(String(f.Category || "")) || f.Archived === true) return;
+    const style = String(f.Title || "").trim();
+    if (style) out.push({ style, desc:String(f.Descr || "").trim(), img:keyOf(f.ImgKey || style) });
+  });
+  return out;
+}
+async function readUPC(){
+  if (!listId(CFG.listUpc)) throw new Error("UPC_MASTER list not found");
+  const { out:c, miss } = await resolveCols(CFG.listUpc, ["Style","Description","Category"]);
+  if (miss.indexOf("Style") >= 0 || miss.indexOf("Category") >= 0) throw new Error("UPC_MASTER is missing a Style or Category column");
+  const sel = [c.Style, c.Description, c.Category].filter(Boolean).join(",");
+  const rows = await gAll(itemsPath(CFG.listUpc) + "?$expand=fields($select=" + sel + ")&$top=999", n => { S.src.upcRead = n; schedRender(); });
+  const seen = new Map();
+  rows.forEach(r => {
+    const f = r.fields || {};
+    if (!IS_FRAG.test(String(f[c.Category] || ""))) return;
+    const style = String(f[c.Style] || "").trim(), k = keyOf(style);
+    if (k && !seen.has(k)) seen.set(k, { style, desc:String((c.Description && f[c.Description]) || "").trim(), img:k });
+  });
+  return Array.from(seen.values());
+}
+function rebuildStyles(){
+  const m = new Map();
+  const add = (r, src) => {
+    const k = keyOf(r.style); if (!k) return;
+    const x = m.get(k) || m.set(k, { key:k, style:r.style, desc:"", img:r.img || k, src:new Set() }).get(k);
+    if (!x.desc && r.desc) x.desc = r.desc;
+    if (src === "QT" && r.img) x.img = r.img;
+    x.src.add(src);
+  };
+  S.src.qt.forEach(r => add(r, "QT"));
+  S.src.upc.forEach(r => add(r, "UPC"));
+  S.map.forEach(r => { if (!m.has(r.key)) add({ style:r.style }, "Manual"); });
+  S.manual.forEach(r => { if (!m.has(r.key)) add(r, "Manual"); });
+  S.styles = Array.from(m.values()).sort((a, b) => byText(a.style, b.style));
+}
+async function loadPhotos(){
+  if (!S.drive) return;
+  const keys = [], seen = new Set();
+  S.styles.forEach(s => { if (s.img && !seen.has(s.img) && !S.photos.has(s.img)){ seen.add(s.img); keys.push(s.img); } });
+  const jobs = []; for (let i = 0; i < keys.length; i += 20) jobs.push(keys.slice(i, i + 20));
+  let idx = 0;
+  const worker = async () => {
+    while (idx < jobs.length){
+      const ks = jobs[idx++];
+      const requests = ks.map((k, i) => ({ id:String(i + 1), method:"GET",
+        url:"/drives/" + S.drive + "/root:/" + encPath(CFG.quoteImgPath) + "/thumb/" + encodeURIComponent(k) + ".jpg" }));
+      try {
+        const res = await gf("/$batch", { method:"POST", body:JSON.stringify({ requests }) });
+        (res.responses || []).forEach(r => S.photos.set(ks[Number(r.id) - 1], (r.status === 200 && r.body && r.body["@microsoft.graph.downloadUrl"]) || null));
+      } catch(e){ ks.forEach(k => S.photos.set(k, null)); }
+      schedRender();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+}
+
+/* ============================== WRITES ============================== */
+let saving = 0;
+function setSave(state, msg){
+  const n = $("#save"); n.className = "save"; n.innerHTML = "";
+  if (state === "busy"){ n.appendChild(el("div", "spin")); n.appendChild(el("span", null, "Saving…")); }
+  else if (state === "ok"){ n.textContent = "All changes saved"; }
+  else if (state === "err"){ n.className = "save err"; n.textContent = msg || "Save failed"; }
+}
+async function track(p){
+  saving++; setSave("busy");
+  try { const r = await p; if (--saving === 0) setSave("ok"); return r; }
+  catch(e){ saving--; if (e.name === "AbortError"){ if (!saving) setSave("ok"); } else setSave("err", e.message); throw e; }
+}
+const namesFor = ids => ids.map(i => (S.libById.get(i) || {}).name).filter(Boolean).join("; ");
+
+async function saveScents(style, ids){
+  const key = keyOf(style), cur = S.map.get(key), c = S.cols.map;
+  return track((async () => {
+    if (!ids.length){
+      if (cur){
+        await gf(itemsPath(CFG.listMap) + "/" + cur.itemId, { method:"DELETE" }).catch(e => { if (e.status !== 404) throw e; });
+        S.map.delete(key);
+      }
+    } else if (cur){
+      const body = {}; body[c.Title] = style; body[c.FragranceIds] = ids.join(";"); body[c.FragranceNames] = namesFor(ids);
+      await gf(itemsPath(CFG.listMap) + "/" + cur.itemId + "/fields", { method:"PATCH", body:JSON.stringify(body) });
+      cur.ids = ids.slice(); cur.style = style;
+    } else {
+      const fields = { Title:style }; fields[c.StyleKey] = key; fields[c.FragranceIds] = ids.join(";"); fields[c.FragranceNames] = namesFor(ids);
+      const r = await gf(itemsPath(CFG.listMap), { method:"POST", body:JSON.stringify({ fields }) });
+      S.map.set(key, { itemId:String(r.id), style, key, ids:ids.slice() });
+    }
+    const d = S.dupes.get(key);
+    if (d){ S.dupes.delete(key); for (const id of d) await gf(itemsPath(CFG.listMap) + "/" + id, { method:"DELETE" }).catch(() => {}); }
+  })());
+}
+/* A rename rewrites FragranceNames on every style using it, so other tools and
+   Excel/Power Automate readers never show a stale name. */
+async function cascadeName(fid){
+  const c = S.cols.map;
+  const rows = Array.from(S.map.values()).filter(r => r.ids.indexOf(fid) >= 0);
+  for (const r of rows){
+    const body = {}; body[c.FragranceNames] = namesFor(r.ids);
+    await track(gf(itemsPath(CFG.listMap) + "/" + r.itemId + "/fields", { method:"PATCH", body:JSON.stringify(body) })).catch(() => {});
+  }
+}
+
+/* ============================== IMAGES ============================== */
+function decodeImage(file){
+  return new Promise((ok, bad) => {
+    const img = new Image(), fr = new FileReader();
+    fr.onload = () => { img.src = fr.result; };
+    fr.onerror = () => bad(new Error("Cannot read file"));
+    img.onload = () => ok(img);
+    img.onerror = () => bad(new Error("Cannot decode this image (HEIC isn't supported — save it as JPG or PNG)"));
+    fr.readAsDataURL(file);
+  });
+}
+function drawTo(img, max){
+  const sc = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+  const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+  x.drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
+function thumbUrl(img){
+  const c = drawTo(img, CFG.thumbPx);
+  let q = .74, u = c.toDataURL("image/jpeg", q);
+  while (u.length > 40000 && q > .4){ q -= .08; u = c.toDataURL("image/jpeg", q); }
+  return u;
+}
+const fullBlob = img => new Promise((ok, bad) => drawTo(img, 1400).toBlob(b => b ? ok(b) : bad(new Error("Encode failed")), "image/jpeg", .86));
+const fullPathFor = id => "/drives/" + S.drive + "/root:/" + encPath(CFG.fullPath) + "/" + encodeURIComponent(id) + ".jpg";
+
+async function openLightbox(f){
+  const dlg = $("#lbDlg"), im = $("#lbImg");
+  im.src = f.thumb || ""; $("#lbCap").textContent = f.name + " · loading full size…";
+  dlg.showModal();
+  try {
+    const it = await gf(fullPathFor(f.id));
+    if (it && it["@microsoft.graph.downloadUrl"] && dlg.open) im.src = it["@microsoft.graph.downloadUrl"];
+    $("#lbCap").textContent = f.name + (f.factory ? " · " + f.factory : "") + (f.code ? " · " + f.code : "");
+  } catch(e){ $("#lbCap").textContent = f.name + " (full size not found — showing thumbnail)"; }
+}
+
+/* ============================== RENDER ============================== */
+let rq = 0;
+function schedRender(){ if (rq) return; rq = requestAnimationFrame(() => { rq = 0; renderAll(); }); }
+function usage(){
+  const u = new Map();
+  S.map.forEach(r => r.ids.forEach(i => (u.get(i) || u.set(i, []).get(i)).push(r.style)));
+  return u;
+}
+function renderAll(){
+  const u = usage();
+  $("#cLib").textContent = S.lib.length;
+  const miss = S.styles.filter(s => !(S.map.get(s.key) || { ids:[] }).ids.length).length;
+  const cs = $("#cSty"); cs.textContent = miss ? miss + " missing" : S.styles.length; cs.className = miss ? "warn" : "";
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.v === S.view));
+  const v = $("#view"), keep = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.keep : null;
+  const caret = keep ? document.activeElement.selectionStart : null;
+  v.innerHTML = "";
+  if (S.missing.length){ v.appendChild(setupBanner()); return; }
+  if (DEMO){ const b = el("div", "banner demo"); b.innerHTML = "<b>Demo</b> Sample fragrances and styles. Changes stay in this tab only — reload to start over. Try + Add fragrance with a photo of a sampler label (the fields fill in), or pick a scent on the Styles tab."; v.appendChild(b); }
+  if (S.optMiss && S.optMiss.length){
+    const b = el("div", "banner");
+    b.appendChild(el("span", null, "Fragrance_Library is missing: " + S.optMiss.map(k => OPT_COLS.find(x => x.key === k).label).join(", ") + "."));
+    const ab = el("button", "btn sm", "Add columns"); ab.onclick = () => addMissingCols(ab); b.appendChild(ab); v.appendChild(b);
+  }
+  if (S.idxWarn){ const b = el("div", "banner"); b.textContent = S.idxWarn; v.appendChild(b); }
+  if (S.view === "lib") renderLib(v, u); else renderStyles(v);
+  if (keep){ const n = v.querySelector('[data-keep="' + keep + '"]'); if (n){ n.focus(); try { n.setSelectionRange(caret, caret); } catch(e){} } }
+}
+function setupBanner(){
+  const b = el("div", "card"), bd = el("div", "dlg-bd");
+  bd.appendChild(el("div", null, "First-time setup")).style.fontWeight = "700";
+  bd.appendChild(el("div", "hint", "Missing on " + CFG.sitePath + ": " + S.missing.join(", ") +
+    ". Create builds them with the right column types (Thumb and FragranceNames as plain multi-line text, StyleKey indexed). You'll be asked once to approve list-management access."));
+  const row = el("div", "dlg-ft"); row.style.padding = "0";
+  const btn = el("button", "btn primary", "Create lists"); btn.onclick = () => createLists(btn);
+  row.appendChild(btn); bd.appendChild(row); b.appendChild(bd);
+  return b;
+}
+function searchBox(val, ph, key, on){
+  const i = el("input", "q"); i.type = "search"; i.placeholder = ph; i.value = val; i.dataset.keep = key;
+  i.oninput = () => { on(i.value); renderAll(); };
+  return i;
+}
+
+function renderLib(v, u){
+  const bar = el("div", "card tools");
+  bar.appendChild(searchBox(S.q, "Search description, factory, scent option or code", "lq", x => { S.q = x; }));
+  const fs = el("select"); fs.appendChild(new Option("All factories", ""));
+  Array.from(new Set(S.lib.map(f => f.factory).filter(Boolean))).sort(byText).forEach(n => fs.appendChild(new Option(n, n)));
+  fs.value = S.fac; fs.onchange = () => { S.fac = fs.value; renderAll(); };
+  bar.appendChild(fs);
+  bar.appendChild(el("div", "spacer"));
+  const q = normName(S.q);
+  const list = S.lib.filter(f => (!S.fac || f.factory === S.fac) &&
+    (!q || hay(f).indexOf(q) >= 0));
+  bar.appendChild(el("span", "count", list.length + " of " + S.lib.length));
+  const fb = el("button", "btn", "Factories"); fb.title = "Choose which factories make fragrance"; fb.onclick = openFactories;
+  bar.appendChild(fb);
+  const add = el("button", "btn primary", "+ Add fragrance"); add.onclick = () => openFrag(null);
+  bar.appendChild(add);
+  v.appendChild(bar);
+  if (!S.lib.length){ v.appendChild(el("div", "card empty", "No fragrances yet. Add the first sampler with + Add fragrance — paste a photo straight from an email.")); return; }
+  if (!list.length){ v.appendChild(el("div", "card empty", "Nothing matches.")); return; }
+  const g = el("div", "fgrid");
+  list.forEach(f => {
+    const c = el("div", "card fcard"), im = el("div", "fimg");
+    if (f.thumb){
+      const i = el("img"); i.src = f.thumb; i.alt = f.name; i.loading = "lazy"; im.appendChild(i);
+      const z = el("button", "zoom", "⤢"); z.title = "View full size"; z.onclick = e => { e.stopPropagation(); openLightbox(f); }; im.appendChild(z);
+    }
+    else im.appendChild(el("span", "none", "No picture"));
+    const bd = el("div", "fbd");
+    const fn = el("div", "fname", f.name || "(no description)"); fn.title = f.name; bd.appendChild(fn);
+    bd.appendChild(el("div", "fmeta", f.factory || "No factory"));
+    bd.appendChild(el("div", "fmeta", [f.option ? "Option " + f.option : "No scent option", fmtDate(f.date)].filter(Boolean).join(" · ")));
+    const n = (u.get(f.id) || []).length;
+    const pr = el("div", "pills");
+    pr.appendChild(el("span", "pill " + (n ? "b" : "m"), n ? n + " style" + (n > 1 ? "s" : "") : "Not used yet"));
+    if (pct(f)) pr.appendChild(el("span", "pill alc", pct(f)));
+    bd.appendChild(pr);
+    c.appendChild(im); c.appendChild(bd);
+    c.onclick = () => openFrag(f);
+    g.appendChild(c);
+  });
+  v.appendChild(g);
+}
+
+function scentChips(ids, onRemove){
+  const w = el("div", "chips");
+  ids.forEach(id => {
+    const f = S.libById.get(id), c = el("span", "chip" + (f ? "" : " gone"));
+    if (f && f.thumb){ const i = el("img"); i.src = f.thumb; i.alt = ""; c.appendChild(i); } else c.appendChild(el("span", "dot"));
+    c.appendChild(el("span", null, f ? f.name : "Deleted #" + id));
+    if (pct(f)) c.appendChild(el("b", "alc", pct(f)));
+    if (f) c.title = [f.name, f.factory, f.option && "Option " + f.option, pct(f)].filter(Boolean).join(" · ");
+    if (onRemove){ const x = el("button", "x", "×"); x.title = "Remove"; x.onclick = e => { e.stopPropagation(); onRemove(id); }; c.appendChild(x); }
+    w.appendChild(c);
+  });
+  return w;
+}
+function renderStyles(v){
+  const bar = el("div", "card tools");
+  bar.appendChild(searchBox(S.sq, "Search style, description or scent", "sq", x => { S.sq = x; }));
+  const has = s => (S.map.get(s.key) || { ids:[] }).ids.length > 0;
+  const nMiss = S.styles.filter(s => !has(s)).length;
+  const seg = el("div", "seg");
+  [["missing", "Missing scent", nMiss], ["has", "Has scent", S.styles.length - nMiss], ["all", "All", S.styles.length]].forEach(o => {
+    const b = el("button", S.sf === o[0] ? "on" : ""); b.appendChild(document.createTextNode(o[1] + " "));
+    const n = el("b", o[0] === "missing" && o[2] ? "warn" : "", String(o[2])); b.appendChild(n);
+    b.onclick = () => { S.sf = o[0]; renderAll(); }; seg.appendChild(b);
+  });
+  bar.appendChild(seg);
+  bar.appendChild(el("div", "spacer"));
+  const st = el("div", "srcbar");
+  if (S.src.qtState === "loading" || S.src.upcState === "loading"){
+    st.appendChild(el("div", "spin"));
+    st.appendChild(el("span", null, "Reading Quote Tracker + UPC_MASTER" + (S.src.upcRead ? " (" + S.src.upcRead.toLocaleString() + " rows)" : "") + "…"));
+  }
+  if (S.src.qtState === "err") st.appendChild(el("span", "pill w", "Quote Tracker: " + S.src.qtErr));
+  if (S.src.upcState === "err") st.appendChild(el("span", "pill w", "UPC_MASTER: " + S.src.upcErr));
+  bar.appendChild(st);
+  const add = el("button", "btn", "+ Add style"); add.onclick = openAddStyle; bar.appendChild(add);
+  v.appendChild(bar);
+
+  const q = normName(S.sq);
+  const rows = S.styles.filter(s => (S.sf === "all" || (S.sf === "has") === has(s)) &&
+    (!q || normName(s.style + " " + s.desc + " " + namesFor((S.map.get(s.key) || { ids:[] }).ids)).indexOf(q) >= 0));
+  const card = el("div", "card");
+  if (!S.styles.length){
+    card.appendChild(S.src.qtState === "loading" ? Object.assign(el("div", "inline-load"), { innerHTML:'<div class="spin"></div>Finding Fragrance-category styles…' })
+      : el("div", "empty", "No Fragrance-category styles found in Quote Tracker or UPC_MASTER. Use + Add style for anything else."));
+    v.appendChild(card); return;
+  }
+  if (!rows.length){ card.appendChild(el("div", "empty", S.sf === "missing" && !q ? "Every Fragrance style has a scent." : "Nothing matches.")); v.appendChild(card); return; }
+  const sc = el("div", "tbl-scroll"), t = el("table");
+  t.innerHTML = "<thead><tr><th></th><th>Style</th><th>Description</th><th>Source</th><th>Scent</th><th></th></tr></thead>";
+  const tb = el("tbody");
+  rows.forEach(s => {
+    const tr = el("tr"), cur = S.map.get(s.key), ids = cur ? cur.ids : [];
+    const ph = el("div", "ph"), p = S.photos.get(s.img);
+    if (p === undefined && S.drive) ph.classList.add("load");
+    else if (p){ const i = el("img"); i.src = p; i.alt = ""; i.loading = "lazy"; ph.appendChild(i); }
+    else ph.appendChild(el("span", "none", "—"));
+    const c0 = el("td", "ph-c"); c0.appendChild(ph); tr.appendChild(c0);
+    tr.appendChild(el("td", "sty", s.style));
+    tr.appendChild(el("td", "desc", s.desc || ""));
+    const src = el("td", "src"); s.src.forEach(x => src.appendChild(el("span", "pill m", x === "QT" ? "Quote Tracker" : x === "UPC" ? "UPC Master" : "Added here"))); tr.appendChild(src);
+    const sc2 = el("td");
+    if (ids.length) sc2.appendChild(scentChips(ids, id => saveScents(s.style, ids.filter(x => x !== id)).then(renderAll).catch(() => {})));
+    else { const b = el("button", "pick", "+ Pick scent"); b.onclick = () => openPicker(s); sc2.appendChild(b); }
+    tr.appendChild(sc2);
+    const ac = el("td", "act");
+    if (ids.length){ const b = el("button", "btn sm", "Change"); b.onclick = () => openPicker(s); ac.appendChild(b); }
+    tr.appendChild(ac);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); sc.appendChild(t); card.appendChild(sc); v.appendChild(card);
+}
+
+/* =========================== LABEL READER ===========================
+   Tesseract runs in the browser, loaded the first time a photo is added. The photo
+   is greyscaled and Otsu-thresholded first; if that pass finds too little, a plain
+   greyscale pass runs. Results only pre-fill the form — nothing saves on its own. */
+/* Sampler label → fields. Tolerant of Tesseract noise ("Pcrce nt", stray "|", "SN"). */
+function parseLabel(text, factories){
+  const out = {};
+  const lines = String(text || "").split(/\r?\n/).map(l => l.replace(/[“”"`~_—–=|\\]+/g, " ").replace(/\s+/g, " ").trim()).filter(Boolean);
+  const key = l => l.toLowerCase().replace(/[^a-z0-9%:]/g, "");
+  const after = l => { const i = l.indexOf(":"); return i >= 0 ? l.slice(i + 1).trim() : l.replace(/^\S+\s*(option)?\s*/i, "").trim(); };
+  const num = s => s.replace(/[oO]/g, "0").replace(/[lI|]/g, "1").replace(/[sS](?=\d)|(?<=\d)[sS]/g, "5");
+  let first = -1;
+  lines.forEach((l, i) => {
+    const k = key(l);
+    let hit = true;
+    if (/^.{0,3}date/.test(k)){
+      const v = num(after(l)).replace(/\s+/g, "");
+      let m = v.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/), d = null;
+      if (m){ let y = +m[3]; if (y < 100) y += 2000; d = [y, +m[1], +m[2]]; }
+      else if ((m = v.match(/(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/))) d = [+m[1], +m[2], +m[3]];
+      if (d && d[1] >= 1 && d[1] <= 12 && d[2] >= 1 && d[2] <= 31) out.date = d[0] + "-" + String(d[1]).padStart(2, "0") + "-" + String(d[2]).padStart(2, "0");
+    } else if (/^.{0,3}(scent)?opt[i1l]?on/.test(k) || /^.{0,3}scent(code|no|#)/.test(k)){
+      const m = after(l).match(/[A-Za-z0-9][A-Za-z0-9\-\/.]*\d[A-Za-z0-9\-\/.]*|\d[A-Za-z0-9\-\/.]*/);
+      if (m) out.option = m[0].replace(/[.\-\/]+$/, "").replace(/^(\d{3,6})\.(\d{1,2})$/, "$1-$2");   // 5475.2 → 5475-2 (dash read as dot)
+    } else if (/^.{0,3}p[ec]r[ce]{1,2}[ec]?nt|^.{0,3}perc|^.{0,3}conc/.test(k)){
+      const m = num(after(l)).replace(/\s+/g, "").match(/(\d{1,3}(?:[.,]\d+)?)%?/);
+      if (m){
+        let n = parseFloat(m[1].replace(",", "."));
+        if (n > 100 && /9$/.test(m[1]) && !/%/.test(after(l))) n = Math.floor(n / 10);   // "20%" read as "209"
+        if (n >= 0 && n <= 100) out.pct = n;
+      }
+    } else if (/^.{0,3}(factory|item|fty)(code|no|#)/.test(k) || /^.{0,3}code:/.test(k)){
+      const m = after(l).match(/[A-Za-z0-9][A-Za-z0-9\-\/.]*/);
+      if (m) out.code = m[0];
+    } else hit = false;
+    if (hit && first < 0) first = i;
+  });
+  /* factory code = the 3-letter code printed under the labelled lines (e.g. RFS) */
+  if (!out.code && first >= 0){
+    for (let i = lines.length - 1; i > first && !out.code; i--){
+      const m = lines[i].match(/(?:^|[^A-Za-z])([A-Z]{3})(?![A-Za-z])/);
+      if (m && !/^(EDP|EDT|OZ|ML)$/.test(m[1])) out.code = m[1];
+    }
+  }
+  /* description = the lines above the first labelled line, with edge junk trimmed */
+  const descLines = (first < 0 ? lines.slice(0, 2) : lines.slice(0, first)).map(l => {
+    let t = l.split(" ").filter(x => /[A-Za-z0-9]/.test(x));
+    const word2 = x => /^\d+$/.test(x) || /^[&+]$/.test(x) || (/^[A-Z][a-z]$/.test(x) && /[aeiouy]|^(Mr|Ms|Dr|St)$/.test(x));   // "La", "De", "7" stay; "SN", "ll", "Bl" go
+    while (t.length > 1 && t[0].length <= 2 && !word2(t[0])) t.shift();
+    while (t.length > 1 && t[t.length - 1].length <= 2 && !/^[A-Z][a-z]?$/.test(t[t.length - 1]) && !/^\d+$/.test(t[t.length - 1])) t.pop();
+    return t.join(" ").replace(/[^A-Za-z0-9)%]+$/, "");
+  }).filter(l => (l.match(/[A-Za-z]/g) || []).length >= 3);
+  if (descLines.length) out.desc = descLines.join(" ");
+  /* a factory named anywhere on the label */
+  const flat = key(lines.join(" "));
+  const f = (factories || []).find(n => { const kn = key(n); return kn.length >= 4 && flat.indexOf(kn) >= 0; });
+  if (f) out.factory = f;
+  return out;
+}
+
+let ocrWorker = null, ocrLoading = null, ocrProg = null;
+function loadScript(src){
+  return new Promise((ok, bad) => {
+    const s = document.createElement("script"); s.src = src; s.onload = ok;
+    s.onerror = () => bad(new Error("the label reader couldn't load (blocked network?)"));
+    document.head.appendChild(s);
+  });
+}
+function getOcr(){
+  if (ocrWorker) return Promise.resolve(ocrWorker);
+  if (!ocrLoading) ocrLoading = (async () => {
+    if (!window.Tesseract) await loadScript(CFG.ocr.lib);
+    if (CFG.ocr.langFile){                                     // seed Tesseract's own cache so it never downloads
+      const r = await fetch(CFG.ocr.langFile);
+      if (!r.ok) throw new Error("the label reader's language file is missing (" + r.status + ")");
+      await idbPut("./eng.traineddata", new Uint8Array(await r.arrayBuffer()));
+    }
+    let failed;
+    const dead = new Promise((_, bad) => { failed = bad; setTimeout(() => bad(new Error("the label reader didn't start")), 120000); });
+    ocrWorker = await Promise.race([dead, Tesseract.createWorker("eng", 1, {
+      workerPath:CFG.ocr.worker, corePath:CFG.ocr.core, langPath:new URL(CFG.ocr.lang, location.href).href,
+      errorHandler:e => failed(new Error("the label reader failed to start (" + (e && e.message || e) + ")")),
+      logger:m => { if (ocrProg && m && typeof m.progress === "number") ocrProg(m.status || "", m.progress); }
+    })]);
+    return ocrWorker;
+  })().catch(e => { ocrLoading = null; throw e; });
+  return ocrLoading;
+}
+function idbPut(key, val){                                     // idb-keyval's default store, which Tesseract reads
+  return new Promise((ok, bad) => {
+    const rq = indexedDB.open("keyval-store");
+    rq.onupgradeneeded = () => rq.result.createObjectStore("keyval");
+    rq.onerror = () => bad(rq.error);
+    rq.onsuccess = () => {
+      const db = rq.result, tx = db.transaction("keyval", "readwrite");
+      tx.objectStore("keyval").put(val, key);
+      tx.oncomplete = () => { db.close(); ok(); }; tx.onerror = () => bad(tx.error);
+    };
+  });
+}
+function ocrCanvas(img, bw){
+  const sc = Math.min(1800 / Math.max(img.width, img.height), 2.5);
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(img.width * sc)); c.height = Math.max(1, Math.round(img.height * sc));
+  const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+  const id = x.getImageData(0, 0, c.width, c.height), d = id.data, hist = new Array(256).fill(0);
+  for (let i = 0; i < d.length; i += 4){ const g = (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000 | 0; d[i] = d[i + 1] = d[i + 2] = g; hist[g]++; }
+  if (bw){                                                     // Otsu threshold
+    const n = c.width * c.height; let sum = 0; for (let t = 0; t < 256; t++) sum += t * hist[t];
+    let sB = 0, wB = 0, best = 0, th = 128;
+    for (let t = 0; t < 256; t++){
+      wB += hist[t]; if (!wB) continue; const wF = n - wB; if (!wF) break;
+      sB += t * hist[t]; const v = wB * wF * Math.pow(sB / wB - (sum - sB) / wF, 2);
+      if (v > best){ best = v; th = t; }
+    }
+    for (let i = 0; i < d.length; i += 4) d[i] = d[i + 1] = d[i + 2] = d[i] > th ? 255 : 0;
+  }
+  x.putImageData(id, 0, 0);
+  return c;
+}
+async function readLabel(img, factories, prog){
+  ocrProg = prog;
+  try {
+    const w = await getOcr();
+    const a = parseLabel((await w.recognize(ocrCanvas(img, true))).data.text, factories);
+    if (Object.keys(a).length >= 3) return a;
+    const b = parseLabel((await w.recognize(ocrCanvas(img, false))).data.text, factories);
+    return Object.keys(b).length > Object.keys(a).length ? b : a;
+  } finally { ocrProg = null; }
+}
+
+/* ============================ DIALOGS =============================== */
+function dlgShell(d, title, sub){
+  d.innerHTML = "";
+  const hd = el("div", "dlg-hd", title); if (sub) hd.appendChild(el("div", "sub", sub));
+  const bd = el("div", "dlg-bd"), ft = el("div", "dlg-ft");
+  d.appendChild(hd); d.appendChild(bd); d.appendChild(ft);
+  return { bd, ft };
+}
+function field(label, input){ const l = el("label", "fld"); l.appendChild(el("span", null, label)); l.appendChild(input); return l; }
+
+/* Add / edit one sampler fragrance. Staged: nothing is written until Save; Cancel
+   (or Esc) backs out at any point, including mid-save. */
+function openFrag(f, onDone){
+  const d = $("#fDlg"), isNew = !f, users = f ? (usage().get(f.id) || []) : [];
+  const st = { file:null, img:null, thumb:f ? f.thumb : "", busy:false, abort:null, armed:false, ocr:0 };
+  const { bd, ft } = dlgShell(d, isNew ? "New fragrance" : "Edit fragrance", isNew ? "A sampler fragrance from a factory" : (users.length ? "Used by " + users.length + " style" + (users.length > 1 ? "s" : "") : "Not used by any style yet"));
+  const row = el("div", "frow");
+  const drop = el("div", "drop");
+  const paint = () => {
+    drop.innerHTML = "";
+    if (st.thumb){ const i = el("img"); i.src = st.thumb; i.alt = ""; drop.appendChild(i); drop.appendChild(el("span", "rep", "Click, drop or paste to replace")); }
+    else drop.appendChild(el("span", null, "Click, drop or paste a picture"));
+  };
+  const take = async file => {
+    if (!file || !/^image\//.test(file.type)){ err.textContent = "That isn't an image."; return; }
+    try { st.img = await decodeImage(file); st.file = file; st.thumb = thumbUrl(st.img); err.textContent = ""; paint(); }
+    catch(e){ err.textContent = e.message; return; }
+    runOcr(false);                                           // fills only the empty fields; "Read label again" overwrites
+  };
+  const ocrl = el("div", "ocrline");
+  const ocrMsg = (cls, text, withCancel, withRetry) => {
+    ocrl.className = "ocrline" + (cls ? " " + cls : ""); ocrl.innerHTML = "";
+    if (cls === "busy") ocrl.appendChild(el("div", "spin"));
+    if (text) ocrl.appendChild(el("span", null, text));
+    if (withCancel){ const x = el("button", "linkbtn", "Cancel"); x.onclick = () => { st.ocr = 0; ocrMsg("", "", false, true); }; ocrl.appendChild(x); }
+    if (withRetry && st.img){ const r = el("button", "linkbtn", text ? "Read label again" : "Read label from photo"); r.onclick = () => runOcr(true); ocrl.appendChild(r); }
+  };
+  const runOcr = async force => {
+    if (!st.img) return;
+    const my = ++ocrSeq; st.ocr = my;
+    ocrMsg("busy", ocrWorker ? "Reading label…" : "Loading label reader…", true);
+    try {
+      const res = await readLabel(st.img, fragFactories(), (status, p) => {
+        if (st.ocr !== my) return;
+        ocrMsg("busy", /recogni/i.test(status) ? "Reading label… " + Math.round(p * 100) + "%" : "Loading label reader (first time only)…", true);
+      });
+      if (st.ocr !== my || !d.open) return;
+      const n = fill(res, force);
+      ocrMsg(n ? "ok" : "bad", n ? "Filled " + n + " field" + (n > 1 ? "s" : "") + " from the label. Check them before saving." :
+        "Couldn't read the label. Try a straight, close photo, or fill it in by hand.", false, true);
+    } catch(e){ console.warn("Label reader:", e); if (st.ocr === my) ocrMsg("bad", "The label reader couldn't load here. Fill it in by hand.", false, true); }
+  };
+  drop.onclick = () => { const i = $("#imgPick"); i.value = ""; i.onchange = () => take(i.files[0]); i.click(); };
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); take(e.dataTransfer.files[0]); };
+  d.onpaste = e => { const it = Array.from(e.clipboardData.items || []).find(x => /^image\//.test(x.type)); if (it){ e.preventDefault(); take(it.getAsFile()); } };
+  paint();
+  const dropcol = el("div", "dropcol"); dropcol.appendChild(drop); dropcol.appendChild(ocrl);
+  if (isNew) ocrl.appendChild(el("span", null, "Add a photo of the label and the fields fill in."));
+
+  const fields = el("div", "fields");
+  let fac;
+  const ff = fragFactories();
+  if (ff.length){
+    fac = el("select"); fac.appendChild(new Option("Choose factory…", ""));
+    ff.forEach(n => fac.appendChild(new Option(n, n)));
+    if (f && f.factory && ff.indexOf(f.factory) < 0)
+      fac.appendChild(new Option(f.factory + (S.factories.indexOf(f.factory) < 0 ? " (not in Factories list)" : " (not marked fragrance)"), f.factory));
+    fac.value = f ? f.factory : "";
+  } else { fac = el("input"); fac.value = f ? f.factory : ""; fac.placeholder = S.facErr || "Factory"; }
+  fields.appendChild(field("Factory", fac));
+  if (S.factories.length && !S.facRows.some(x => x.frag)){
+    const tip = el("button", "linkbtn", "Showing every factory — choose which make fragrance");
+    tip.onclick = () => { d.close(); openFactories(); };
+    fields.appendChild(tip);
+  }
+  const nm = el("input"); nm.value = f ? f.name : ""; nm.placeholder = "Add description here";
+  fields.appendChild(field("Description", nm));
+  const missing = k => S.optMiss && S.optMiss.indexOf(k) >= 0;
+  const gate = (inp, k) => { if (missing(k)){ inp.disabled = true; inp.placeholder = "Add the column first"; } return inp; };
+  const dt = el("input"); dt.type = "date"; dt.value = f ? (f.date || "") : ""; gate(dt, "SampleDate");            // the label's date, not today
+  const opt = el("input"); opt.value = f ? (f.option || "") : ""; opt.placeholder = "From the label"; gate(opt, "ScentOption");
+  const g1 = el("div", "fgrid2"); g1.appendChild(field("Date", dt)); g1.appendChild(field("Scent Option", opt)); fields.appendChild(g1);
+  const alc = el("input"); alc.type = "number"; alc.min = "0"; alc.max = "100"; alc.step = "0.1"; alc.inputMode = "decimal";
+  alc.value = f && f.alc != null ? String(f.alc) : ""; alc.placeholder = "From the label"; gate(alc, "Alcohol");
+  const code = el("input"); code.value = f ? f.code : ""; code.placeholder = "3-letter code on the label";
+  const g2 = el("div", "fgrid2"); g2.appendChild(field("Percent", alc)); g2.appendChild(field("Factory code", code)); fields.appendChild(g2);
+  [fac, nm, dt, opt, alc, code].forEach(i => i.addEventListener("input", () => i.classList.remove("auto")));
+  [fac, dt].forEach(i => i.addEventListener("change", () => i.classList.remove("auto")));
+  const fill = (r, force) => {
+    let n = 0;
+    const put = (inp, v, blank) => {
+      if (v == null || v === "" || inp.disabled) return;
+      if (!force && !blank) return;
+      if (inp.tagName === "SELECT" && !Array.from(inp.options).some(o => o.value === v)) return;
+      inp.value = String(v); inp.classList.add("auto"); n++;
+    };
+    if (!r.factory && r.code){                               // a code seen before names its factory
+      const seen = S.lib.filter(x => x.code && x.code.toUpperCase() === String(r.code).toUpperCase()).map(x => x.factory);
+      if (seen.length) r.factory = seen.sort((a, b) => seen.filter(v => v === b).length - seen.filter(v => v === a).length)[0];
+    }
+    put(fac, r.factory, !fac.value);
+    put(nm, r.desc, !nm.value.trim());
+    put(dt, r.date, !dt.value);
+    put(opt, r.option, !opt.value.trim());
+    put(alc, r.pct, alc.value === "");
+    put(code, r.code, !code.value.trim());
+    return n;
+  };
+  if (users.length){
+    const w = el("div", "chips");
+    users.slice().sort(byText).forEach(s => { const b = el("button", "pick", s); b.title = "Show this style"; b.onclick = () => { d.close(); S.view = "sty"; S.sf = "all"; S.sq = s; renderAll(); }; w.appendChild(b); });
+    fields.appendChild(field("Used by", w));
+  }
+  row.appendChild(dropcol); row.appendChild(fields); bd.appendChild(row);
+  const err = el("div", "err-line"); bd.appendChild(err);
+
+  if (!isNew){
+    const del = el("button", "btn danger", "Delete");
+    if (users.length){ del.disabled = true; del.title = "Remove it from its styles first"; }
+    del.onclick = async () => {
+      if (!st.armed){ st.armed = true; del.textContent = "Confirm delete"; del.classList.add("armed"); return; }
+      del.disabled = true;
+      try {
+        await track(gf(itemsPath(CFG.listLib) + "/" + f.id, { method:"DELETE" }));
+        if (S.drive) gf(fullPathFor(f.id), { method:"DELETE" }).catch(() => {});
+        S.lib = S.lib.filter(x => x.id !== f.id); S.libById.delete(f.id);
+        d.close(); renderAll();
+      } catch(e){ err.textContent = e.message; del.disabled = false; }
+    };
+    ft.appendChild(del);
+  }
+  ft.appendChild(el("div", "spacer"));
+  const cancel = el("button", "btn", "Cancel");
+  const save = el("button", "btn primary", isNew ? "Add fragrance" : "Save");
+  cancel.onclick = () => { st.ocr = 0; if (st.abort) st.abort.abort(); d.close(); };
+  d.oncancel = () => { st.ocr = 0; if (st.abort) st.abort.abort(); };
+  ft.appendChild(cancel); ft.appendChild(save);
+
+  save.onclick = async () => {
+    const name = nm.value.trim().replace(/\s+/g, " "), factory = fac.value.trim(), cd = code.value.trim();
+    const option = opt.value.trim(), date = dt.value || "";
+    if (!factory){ err.textContent = "Pick the factory."; fac.focus(); return; }
+    if (!name){ err.textContent = "Description is required."; nm.focus(); return; }
+    const clash = option && S.lib.find(x => x.factory === factory && normName(x.option) === normName(option) && (!f || x.id !== f.id));
+    if (clash){ err.textContent = "Scent option " + option + " from " + factory + " is already in the library (“" + clash.name + "”)."; opt.focus(); return; }
+    const av = String(alc.value).trim(), an = av === "" ? null : Number(av);
+    if (an != null && (isNaN(an) || an < 0 || an > 100)){ err.textContent = "Percent must be between 0 and 100."; alc.focus(); return; }
+    st.ocr = 0;
+    st.abort = new AbortController(); const signal = st.abort.signal;
+    save.disabled = true; save.textContent = "Saving…"; err.textContent = "";
+    const c = S.cols.lib, fields = {};
+    fields[c.Title] = name; fields[c.Factory] = factory; fields[c.FactoryCode] = cd;
+    if (c.Alcohol) fields[c.Alcohol] = an;
+    if (c.SampleDate) fields[c.SampleDate] = date;
+    if (c.ScentOption) fields[c.ScentOption] = option;
+    if (st.file) fields[c.Thumb] = st.thumb;
+    try {
+      let id = f ? f.id : null;
+      await track((async () => {
+        if (isNew){ const r = await gf(itemsPath(CFG.listLib), { method:"POST", signal, body:JSON.stringify({ fields }) }); id = String(r.id); }
+        else await gf(itemsPath(CFG.listLib) + "/" + id + "/fields", { method:"PATCH", signal, body:JSON.stringify(fields) });
+        if (st.img && DEMO) DEMO_DB.full[id] = URL.createObjectURL(await fullBlob(st.img));
+        else if (st.img && S.drive){
+          const blob = await fullBlob(st.img);
+          await fetch(G + fullPathFor(id) + ":/content", { method:"PUT", signal, headers:{ Authorization:"Bearer " + (await getToken()), "Content-Type":"image/jpeg" }, body:blob })
+            .then(r => { if (!r.ok) throw new Error("Full-size upload failed (" + r.status + ") — the thumbnail saved"); });
+        }
+      })());
+      const renamed = f && normName(f.name) !== normName(name);
+      const rec = { id, name, factory, code:cd, thumb:st.thumb, alc:c.Alcohol ? an : (f ? f.alc : null),
+        date:c.SampleDate ? date : (f ? f.date : ""), option:c.ScentOption ? option : (f ? f.option : "") };
+      if (f){ Object.assign(f, rec); } else { S.lib.push(rec); S.libById.set(id, rec); }
+      S.lib.sort((a, b) => byText(a.name, b.name));
+      d.close(); renderAll();
+      if (renamed) cascadeName(id);
+      if (onDone) onDone(rec);
+    } catch(e){
+      if (e.name === "AbortError"){ if (isNew) loadLib().then(renderAll).catch(() => {}); return; }
+      err.textContent = e.message; save.disabled = false; save.textContent = isNew ? "Add fragrance" : "Save";
+    } finally { st.abort = null; }
+  };
+  d.showModal(); (isNew ? fac : save).focus();
+}
+let ocrSeq = 0;
+
+/* Pick the scent(s) for one style from the library. */
+function openPicker(s){
+  const d = $("#pDlg"), cur = S.map.get(s.key), start = cur ? cur.ids.slice() : [];
+  let sel = start.slice(), q = "";
+  const { bd, ft } = dlgShell(d, "Scent for " + s.style, s.desc || "");
+  const top = el("div", "frow"); top.style.alignItems = "center";
+  const qi = el("input"); qi.type = "search"; qi.placeholder = "Search description, factory or scent option"; qi.style.flex = "1 1 220px";
+  qi.oninput = () => { q = normName(qi.value); paintTiles(); };
+  top.appendChild(qi);
+  const nw = el("button", "btn", "+ New fragrance");
+  nw.onclick = () => openFrag(null, rec => { if (sel.indexOf(rec.id) < 0) sel.push(rec.id); paint(); });
+  top.appendChild(nw);
+  bd.appendChild(top);
+  const chosen = el("div"); bd.appendChild(chosen);
+  const tiles = el("div", "ptiles"); bd.appendChild(tiles);
+  const err = el("div", "err-line"); bd.appendChild(err);
+  const paintChosen = () => {
+    chosen.innerHTML = "";
+    if (!sel.length) chosen.appendChild(el("div", "hint", "Nothing picked yet — click a fragrance below. Pick more than one for a set."));
+    else chosen.appendChild(scentChips(sel, id => { sel = sel.filter(x => x !== id); paint(); }));
+  };
+  const paintTiles = () => {
+    tiles.innerHTML = "";
+    const list = S.lib.filter(f => !q || hay(f).indexOf(q) >= 0);
+    if (!list.length){ tiles.appendChild(el("div", "hint", S.lib.length ? "Nothing matches." : "The library is empty — add one with + New fragrance.")); return; }
+    list.forEach(f => {
+      const b = el("button", "ptile" + (sel.indexOf(f.id) >= 0 ? " on" : "")), im = el("div", "im");
+      if (f.thumb){ const i = el("img"); i.src = f.thumb; i.alt = ""; i.loading = "lazy"; im.appendChild(i); } else im.textContent = "No picture";
+      const tx = el("div", "tx", f.name); tx.appendChild(el("small", null, [f.factory, f.option, pct(f)].filter(Boolean).join(" · ") || " "));
+      b.appendChild(im); b.appendChild(tx); b.appendChild(el("span", "ck", "✓"));
+      b.onclick = () => { sel = sel.indexOf(f.id) >= 0 ? sel.filter(x => x !== f.id) : sel.concat([f.id]); paint(); };
+      tiles.appendChild(b);
+    });
+  };
+  ft.appendChild(el("div", "spacer"));
+  const cancel = el("button", "btn", "Cancel"), save = el("button", "btn primary", "Save");
+  const paint = () => { paintChosen(); paintTiles(); save.disabled = sel.join(";") === start.join(";"); };
+  cancel.onclick = () => d.close();
+  save.onclick = async () => {
+    save.disabled = true; save.textContent = "Saving…";
+    try { await saveScents(s.style, sel); d.close(); renderAll(); }
+    catch(e){ err.textContent = e.message; save.disabled = false; save.textContent = "Save"; }
+  };
+  ft.appendChild(cancel); ft.appendChild(save);
+  paint(); d.showModal(); qi.focus();
+}
+
+/* A style that isn't tagged Fragrance anywhere (or isn't in either list yet).
+   It's kept once a scent is saved for it. */
+function openAddStyle(){
+  const d = $("#aDlg"), { bd, ft } = dlgShell(d, "Add a style", "For a fragrance style not tagged Fragrance in Quote Tracker or UPC_MASTER");
+  const sty = el("input"); sty.placeholder = "Style #";
+  const ds = el("input"); ds.placeholder = "Description (optional)";
+  bd.appendChild(field("Style #", sty)); bd.appendChild(field("Description", ds));
+  const err = el("div", "err-line"); bd.appendChild(err);
+  ft.appendChild(el("div", "spacer"));
+  const cancel = el("button", "btn", "Cancel"), ok = el("button", "btn primary", "Pick scent");
+  cancel.onclick = () => d.close();
+  ok.onclick = () => {
+    const style = sty.value.trim(), k = keyOf(style);
+    if (!k){ err.textContent = "Enter a style #."; sty.focus(); return; }
+    let s = S.styles.find(x => x.key === k);
+    if (!s){ S.manual.set(k, { style, desc:ds.value.trim(), key:k, img:k }); rebuildStyles(); s = S.styles.find(x => x.key === k); loadPhotos(); }
+    d.close(); S.view = "sty"; S.sf = "all"; S.sq = style; renderAll(); openPicker(s);
+  };
+  sty.onkeydown = ds.onkeydown = e => { if (e.key === "Enter") ok.click(); };
+  ft.appendChild(cancel); ft.appendChild(ok);
+  d.showModal(); sty.focus();
+}
+
+/* ============================ DEEP LINKS ============================
+   #f=<id> opens a fragrance; #style=<STYLE #> opens that style's scent picker.
+   Kept in sessionStorage so it survives the sign-in redirect. */
+function stashHash(){ if (location.hash.length > 1) try { sessionStorage.setItem("fl-hash", location.hash); } catch(e){} }
+function applyHash(){
+  let h = location.hash; try { h = h.length > 1 ? h : (sessionStorage.getItem("fl-hash") || ""); sessionStorage.removeItem("fl-hash"); } catch(e){}
+  const p = new URLSearchParams(String(h).replace(/^#/, ""));
+  if (p.get("f")){ const f = S.libById.get(p.get("f")); if (f){ S.view = "lib"; renderAll(); openFrag(f); } }
+  else if (p.get("style")){
+    const style = p.get("style").trim(), k = keyOf(style);
+    S.view = "sty"; S.sf = "all"; S.sq = style;
+    let s = S.styles.find(x => x.key === k);
+    if (!s){ S.manual.set(k, { style, desc:"", key:k, img:k }); rebuildStyles(); s = S.styles.find(x => x.key === k); }
+    renderAll(); openPicker(s);
+  }
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+}
+
+
+/* ============================== DEMO ================================
+   ?demo (or no sign-in library) runs the real screens against an in-memory
+   copy of the lists. Nothing leaves the tab. */
+let DEMO = false;
+const DEMO_DB = { seq:200, lists:{}, full:{} };
+const DEMO_COLS = {
+  Fragrance_Library:LIB_COLS.concat(OPT_KEYS), Style_Scents:MAP_COLS,
+  Qoute_Tracker:["Title","Descr","Category","ImgKey","Archived"], Factories:["Title","Fragrance"], UPC_MASTER:["Title","Style","Description","Category"]
+};
+function demoVial(liquid, glass, code){
+  const c = document.createElement("canvas"); c.width = c.height = 220;
+  const x = c.getContext("2d"), g = x.createLinearGradient(0, 0, 220, 220);
+  g.addColorStop(0, "#fbfcfe"); g.addColorStop(1, glass); x.fillStyle = g; x.fillRect(0, 0, 220, 220);
+  const rr = (X, Y, W, H, R) => { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); };
+  x.fillStyle = "rgba(31,45,75,.10)"; x.beginPath(); x.ellipse(110, 196, 52, 7, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = "#2b3442"; rr(96, 26, 28, 30, 5); x.fill();                       // cap
+  x.fillStyle = "#c9ced6"; rr(102, 54, 16, 10, 2); x.fill();                      // collar
+  x.fillStyle = "rgba(255,255,255,.75)"; rr(64, 62, 92, 130, 18); x.fill();       // glass
+  x.strokeStyle = "rgba(31,45,75,.22)"; x.lineWidth = 2; x.stroke();
+  x.fillStyle = liquid; rr(68, 92, 84, 96, 15); x.fill();                         // juice
+  x.fillStyle = "rgba(255,255,255,.35)"; rr(74, 70, 10, 110, 5); x.fill();        // highlight
+  x.fillStyle = "rgba(255,255,255,.92)"; rr(78, 122, 64, 30, 4); x.fill();        // label
+  x.fillStyle = "#16202c"; x.font = "bold 12px -apple-system,Segoe UI,sans-serif"; x.textAlign = "center"; x.fillText(code, 110, 141);
+  return c.toDataURL("image/jpeg", .8);
+}
+function demoSeed(){
+  const add = (list, fields) => (DEMO_DB.lists[list] = DEMO_DB.lists[list] || []).push({ id:String(++DEMO_DB.seq), fields, mod:"2026-10-0" + (1 + DEMO_DB.seq % 9) + "T12:00:00Z" });
+  const L = DEMO_DB.lists; Object.keys(DEMO_COLS).forEach(n => L[n] = []);
+  ["Guangzhou Aroma Co.", "Ningbo Sunrise", "Shantou Bright", "Yiwu Fine Scents", "Zhejiang Bloom"].forEach(n => add("Factories", { Title:n, Fragrance:true }));
+  ["Dongguan Brush Works", "Xiamen Cosmetic Bags", "Ningbo Compact Co.", "Shenzhen Mirror & Gift"].forEach(n => add("Factories", { Title:n, Fragrance:false }));
+  const F = [
+    ["Vanilla Cashmere Eau de Parfum", "Guangzhou Aroma Co.", "GA-2201", "#e9cf9f", "#f3e7d3", 20],
+    ["Pink Peony Body Mist", "Ningbo Sunrise", "NS-088", "#f2b3c4", "#f8e1e8", 5],
+    ["Ocean Breeze Eau de Toilette", "Guangzhou Aroma Co.", "GA-2245", "#9fcbe8", "#dcebf6", 12],
+    ["Amber Oud Eau de Parfum", "Shantou Bright", "SB-410", "#b8743a", "#efdcc8", 22],
+    ["Coconut Lime Body Mist", "Ningbo Sunrise", "NS-091", "#cfe6a8", "#e8f3da", 4],
+    ["Black Cherry Eau de Parfum", "Yiwu Fine Scents", "YF-17", "#7a2638", "#ecd6db", 18.5],
+    ["White Tea & Ginger Hair Mist", "Zhejiang Bloom", "ZB-5530", "#efe6c2", "#f5f2e4", null],
+    ["Lavender Fields Pillow Mist", "Shantou Bright", "SB-422", "#b7a3dc", "#ebe5f6", 3],
+    ["Sugared Pear Body Mist", "Yiwu Fine Scents", "YF-23", "#d9d27a", "#f2f0d8", 6],
+    ["Midnight Musk Eau de Parfum", "Zhejiang Bloom", "ZB-5512", "#4b4f6b", "#dfe0ea", 20]
+  ];
+  F.forEach((f, i) => { const opt = f[2].replace(/^[A-Z]+-/, "") + "-" + (1 + i % 3);
+    const fcode = { "Guangzhou Aroma Co.":"GAC", "Ningbo Sunrise":"NBS", "Shantou Bright":"RFS", "Yiwu Fine Scents":"YFS", "Zhejiang Bloom":"ZJB" }[f[1]];
+    add("Fragrance_Library", { Title:f[0], Factory:f[1], FactoryCode:fcode, ScentOption:opt, SampleDate:"2026-09-" + String(8 + i * 2).padStart(2, "0"), Alcohol:f[5], Thumb:f[0] === "Lavender Fields" ? "" : demoVial(f[3], f[4], opt) }); });
+  const id = n => L.Fragrance_Library.find(r => r.fields.Title === n).id;
+  [["FR1001","3pc Body Mist Gift Set 8oz"],["FR1002","Rollerball Trio 10ml"],["FR1005","Eau de Parfum 3.4oz Boxed"],
+   ["FR1008","Mini Perfume Discovery Set 5pc"],["FR1011","Fragrance Lotion + Mist Duo"],["FR1014","Holiday Body Mist Ornament 2oz"],
+   ["LB220","Lip Balm 4pk",""]].forEach(r => add("Qoute_Tracker", { Title:r[0], Descr:r[1], Category:r[2] === "" ? "Cosmetics" : "Fragrance" }));
+  [["FR0920","Body Spray 8oz"],["FR0931","Eau de Toilette 1.7oz"],["FR1005","Eau de Parfum 3.4oz Boxed"],["FR0944","Hair & Body Mist 5oz"],["WP100","Makeup Wipes 30ct",1]]
+    .forEach(r => add("UPC_MASTER", { Style:r[0], Description:r[1], Category:r[2] ? "Wipes" : "Fragrance" }));
+  [["FR1001",["Vanilla Cashmere Eau de Parfum","Pink Peony Body Mist","Ocean Breeze Eau de Toilette"]],["FR0920",["Black Cherry Eau de Parfum"]],["FR0931",["Amber Oud Eau de Parfum"]],["FR1011",["Coconut Lime Body Mist"]]]
+    .forEach(r => { const ids = r[1].map(id); add("Style_Scents", { Title:r[0], StyleKey:r[0], FragranceIds:ids.join(";"), FragranceNames:r[1].join("; ") }); });
+}
+async function demoGraph(path, opts){
+  await new Promise(r => setTimeout(r, 90));
+  const m = opts.method || "GET", body = typeof opts.body === "string" ? JSON.parse(opts.body) : null;
+  const p = decodeURIComponent(String(path).replace(G, "")), L = DEMO_DB.lists;
+  const nf = () => { const e = new Error("Graph 404 — not found"); e.status = 404; throw e; };
+  let x;
+  if (/^\/sites\/[^/]*:\/sites\//.test(p)) return { id:"demo-site" };
+  if (/\/drives\?/.test(p)) return { value:[{ id:"demo-drive", name:CFG.imgDrive }] };
+  if (/\/lists\?/.test(p)) return { value:Object.keys(L).map(n => ({ id:n, name:n, displayName:n })) };
+  if (p === "/$batch") return { responses:((body && body.requests) || []).map(r => ({ id:r.id, status:404 })) };
+  if ((x = /\/full\/([^/.]+)\.jpg/.exec(p))){
+    if (m === "DELETE"){ delete DEMO_DB.full[x[1]]; return null; }
+    return DEMO_DB.full[x[1]] ? { "@microsoft.graph.downloadUrl":DEMO_DB.full[x[1]] } : nf();
+  }
+  if ((x = /\/lists\/([^/?]+)\/columns/.exec(p))) return { value:(DEMO_COLS[x[1]] || []).map(n => ({ name:n, displayName:n, readOnly:false })) };
+  if ((x = /\/lists\/([^/?]+)\/items\/([^/?]+)\/fields$/.exec(p)) && m === "PATCH"){
+    const it = (L[x[1]] || []).find(r => r.id === x[2]); if (!it) nf();
+    Object.assign(it.fields, body); it.mod = new Date().toISOString(); return it.fields;
+  }
+  if ((x = /\/lists\/([^/?]+)\/items\/([^/?]+)$/.exec(p)) && m === "DELETE"){
+    const a = L[x[1]] || [], i = a.findIndex(r => r.id === x[2]); if (i < 0) nf(); a.splice(i, 1); return null;
+  }
+  if ((x = /\/lists\/([^/?]+)\/items$/.exec(p)) && m === "POST"){
+    const it = { id:String(++DEMO_DB.seq), fields:Object.assign({}, body.fields), mod:new Date().toISOString() };
+    (L[x[1]] = L[x[1]] || []).push(it); return { id:it.id, fields:it.fields };
+  }
+  if ((x = /\/lists\/([^/?]+)\/items\?/.exec(p))) return { value:(L[x[1]] || []).map(r => ({ id:r.id, lastModifiedDateTime:r.mod, fields:Object.assign({}, r.fields) })) };
+  return nf();
+}
+function startDemo(){
+  DEMO = true; S.acct = { name:"Demo · sample data" };
+  demoSeed(); boot();
+}
+
+/* ============================ BACKGROUND ============================ */
+function flowField(){
+  const cv = $("#flow"), ctx = cv.getContext("2d");
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let W, H;
+  const resize = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; };
+  resize(); addEventListener("resize", resize);
+  let seed = 20260610;
+  const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const P = [];
+  for (let i = 0; i < 70; i++) P.push({ x:rnd() * W, y:rnd() * H, s:.18 + rnd() * .34 });
+  const noise = (x, y, t) => Math.sin(x * .0016 + t) + Math.cos(y * .0021 - t * .8) + Math.sin((x + y) * .0009 + t * .5);
+  let t = 0;
+  (function tick(){
+    t += .0016;
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineWidth = 1; ctx.strokeStyle = "rgba(27,111,174,.13)";
+    P.forEach(p => {
+      const a = noise(p.x, p.y, t) * Math.PI;
+      p.x += Math.cos(a) * p.s; p.y += Math.sin(a) * p.s;
+      if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+      if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - Math.cos(a) * 7, p.y - Math.sin(a) * 7); ctx.stroke();
+    });
+    requestAnimationFrame(tick);
+  })();
+}
+
+/* ============================== INIT ================================ */
+function gateMsg(html){ $("#gateMsg").innerHTML = html; }
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { S.view = b.dataset.v; renderAll(); });
+
+async function start(){
+  flowField(); stashHash();
+  $("#demoBtn").onclick = startDemo;
+  if (/[?&]demo\b/.test(location.search) || !msalApp) return startDemo();
+  if (CFG.clientId.indexOf("PASTE_") === 0){
+    gateMsg('<span style="color:var(--bad)">Set CFG.clientId to this tool\'s app registration.</span>');
+    $("#demoBtn").style.display = ""; return;
+  }
+  await msalApp.initialize();
+  const rr = await msalApp.handleRedirectPromise().catch(e => { console.error(e); return null; });
+  const acct = (rr && rr.account) || msalApp.getAllAccounts()[0];
+  if (!acct){
+    gateMsg(""); $("#signIn").style.display = "";
+    $("#signIn").onclick = () => framed
+      ? msalApp.loginPopup({ scopes:CFG.scopes }).then(r => { S.acct = r.account; msalApp.setActiveAccount(r.account); boot(); })
+      : msalApp.loginRedirect({ scopes:CFG.scopes });
+    return;
+  }
+  S.acct = acct; msalApp.setActiveAccount(acct);
+  boot();
+}
+async function boot(){
+  try {
+    gateMsg('<div class="spin"></div>Loading lists…');
+    await resolveSite();
+    $("#whoName").textContent = S.acct.name || S.acct.username || "";
+    S.missing = [CFG.listLib, CFG.listMap].filter(n => !listId(n));
+    if (S.missing.length){
+      $("#gate").style.display = "none"; $("#app").style.display = ""; renderAll();
+      let resume = false; try { resume = sessionStorage.getItem("fl-create") === "1"; } catch(e){}
+      if (resume) createLists();
+      return;
+    }
+    const a = await resolveCols(CFG.listLib, LIB_COLS.concat(OPT_KEYS)), b = await resolveCols(CFG.listMap, MAP_COLS);
+    S.cols.lib = a.out; S.cols.map = b.out;
+    S.optMiss = a.miss.filter(x => OPT_KEYS.indexOf(x) >= 0); a.miss = a.miss.filter(x => OPT_KEYS.indexOf(x) < 0);   // offered as a one-click add
+    const miss = a.miss.map(x => CFG.listLib + "." + x).concat(b.miss.map(x => CFG.listMap + "." + x));
+    if (miss.length) throw new Error("Missing column(s): " + miss.join(", "));
+    await Promise.all([loadLib(), loadMap(), loadFactories()]);
+    rebuildStyles();
+    $("#gate").style.display = "none"; $("#app").style.display = "";
+    renderAll();
+    let resumeCols = false; try { resumeCols = sessionStorage.getItem("fl-cols") === "1"; } catch(e){}
+    if (S.optMiss.length && resumeCols) addMissingCols();
+    applyHash();
+    loadSources();
+  } catch(e){
+    console.error(e);
+    const denied = e.status === 403 || e.status === 401;
+    $("#gate").style.display = ""; $("#app").style.display = "none";
+    gateMsg('<span style="color:var(--bad)">' + (denied
+      ? "Signed in, but you don't have access to the Production site. Ask Saul or Judah to add you."
+      : esc(e.message || "Startup failed")) + "</span>");
+  }
+}
+start();
+</script>
+</body>
+</html>
